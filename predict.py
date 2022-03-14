@@ -74,10 +74,8 @@ def main():
     parser.add_argument('--checkpoint', help = 'tensorflow ckpt', default = cfg.predict_ckpt_path)
     args = parser.parse_args()
 
-    assert (args.input_dir is not None and args.i_s is None and args.i_t is None) \
-            or (args.input_dir is None and args.i_s is not None and args.i_t is not None)
+
     assert args.save_dir is not None
-    assert args.save_mode == 0 or args.save_mode == 1
     assert args.checkpoint is not None
 
     # gpu
