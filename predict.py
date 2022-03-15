@@ -3,7 +3,7 @@ SRNet - Editing Text in the Wild
 Data prediction.
 Copyright (c) 2019 Netease Youdao Information Technology Co.,Ltd.
 Licensed under the GPL License (see LICENSE for details)
-Written by Yu Qian
+Written by Krisha Bhambani
 """
 
 from model import SRNet
@@ -13,15 +13,14 @@ import cfg
 from utils import *
 from datagen import srnet_datagen, get_input_data
 import argparse
-import tensorflow.compat.v1 as tf
 from craft_text_detector import Craft
 from google.colab.patches import cv2_imshow
 from reconstruction_utils import *
-
+import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior()
-os.mkdir('/results/')
-os.mkdir('/cur_test/')
-os.mkdir('craft_outputs/')
+
+
+
 def SRNet_execute(i_s_path, i_t_path, checkpoint, save_dir, input_dir=None):
     # define model
     print_log('model compiling start.', content_color = PrintColor['yellow'])
@@ -54,7 +53,8 @@ def SRNet_execute(i_s_path, i_t_path, checkpoint, save_dir, input_dir=None):
                 o_sk, o_t, o_b, o_f = model.predict(sess, i_t, i_s)
                 
                 cv2.imwrite(os.path.join(save_dir, 'result.png'), o_f)
-                if args.save_mode == 1:
+                save_mode = 1
+                if save_mode == 1:
                     cv2.imwrite(os.path.join(save_dir, 'result_sk.png'), o_sk)
                     cv2.imwrite(os.path.join(save_dir, 'result_t.png'), o_t)
                     cv2.imwrite(os.path.join(save_dir, 'result_b.png'), o_b)
@@ -80,10 +80,19 @@ def main():
 
     # gpu
     os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
-    img_path = args.img_path
+    if not os.path.exists('results/'):
+      print("SF")
+      os.mkdir('results/')
+    if not os.path.exists('cur_test/'):
+      print("SF")
+      os.mkdir('cur_test/')
+    if not os.path.exists('craft_outputs/'):
+      os.mkdir('craft_outputs/')
+      
+    img_path = args.img_dir
     img_name = args.img_name
     img= cv2.imread(img_path)
-    print(img.shape)
+    print(img_name)
     if abs(img.shape[0] - img.shape[1])>150:
       if (img.shape[0]<img.shape[1]):
         s = img.shape[0] 
@@ -96,7 +105,7 @@ def main():
 
     #craft------------------------------------------------------
     # set image path and export folder directory
-    image = img_path # can be filepath, PIL image or numpy array
+    image = img # can be filepath, PIL image or numpy array
     output_dir = 'craft_outputs/'
 
     # create a craft instance
@@ -114,10 +123,9 @@ def main():
     craft.unload_refinenet_model()
     #---------------------------------------------------------------
 
-    pipeline = keras_ocr.pipeline.Pipeline()
     prediction_words = read_text(img_path)
     #prediction_words = read_text(img_path)
-    words = load_vocabulary(words_dir)
+    words = load_vocabulary(args.words_dir)
     incomplete_word = prediction_words[0][0][0]
     flag = False
     start = prediction_words[0][0][0]
@@ -128,11 +136,11 @@ def main():
     word_list = my_autocorrect(words, incomplete_word, flag, start, end)
     letter_write = missing_letters(word_list['Word'].iloc[0].lower(), incomplete_word)
     non_stylised_gen(img_name, img_path, letter_write)
-    SRNet_execute('/cur_test/i_s.png', '/cur_test/i_t.png', checkpoint, save_dir='/results/') ####
+    SRNet_execute('cur_test/i_s.png', 'cur_test/i_t.png', args.checkpoint, save_dir='results/') ####
     result_path = 'results/result.png'
-    res = final_integration(img_name, letter_write)
+    res = final_integration(img, img_name, letter_write, word_list)
     cv2_imshow(res)
-
+    cv2.imwrite('results/reconstructed_text.png', res)
     
                 
 if __name__ == '__main__':
