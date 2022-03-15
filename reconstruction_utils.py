@@ -9,6 +9,7 @@ import os
 import pathlib
 import time
 import datetime
+import matplotlib.pyplot as plt 
 
 import pandas as pd
 import numpy as np
@@ -126,7 +127,7 @@ def get_craft_coords(img_name):
     y4.append(int(y4_))
   return x1, y1, x2, y2, x3, y3, x4, y4
 
-def extract_craft_text_region(img_name, img_path):
+def extract_craft_text_region(img_name, img_path, border):
   x1, y1, x2, y2, x3, y3, x4, y4 = get_craft_coords(img_name)
   img = cv2.imread(img_path)
   lol = img.shape[1]*10//1600        
@@ -136,15 +137,17 @@ def extract_craft_text_region(img_name, img_path):
   #extract_im = np.zeros((real_text.shape[0], real_text.shape[1]), dtype=np.uint8)
   #extract_im = extract_im + 128
   #extract_im[y1[0]-10:y3[0]+10, x1[0]-lol:x3[0]+ol] = real_text
-
+    
   col = np.mean(real_text)
-  if (col<150):
+  if (border==1):
     colour = (0, 0, 0)
-  elif (col<180):
+    real_text = cv2.copyMakeBorder(real_text,30,30,30,30,cv2.BORDER_CONSTANT,value=colour)
+  elif (border==2):
     colour = (128, 128, 128)
-  else:
+    real_text = cv2.copyMakeBorder(real_text,30,30,30,30,cv2.BORDER_CONSTANT,value=colour)
+  elif (border==3):
     colour = (255, 255, 255)
-  real_text = cv2.copyMakeBorder(real_text,30,30,30,30,cv2.BORDER_CONSTANT,value=colour)
+    real_text = cv2.copyMakeBorder(real_text,30,30,30,30,cv2.BORDER_CONSTANT,value=colour)
 
 
   cv2_imshow(real_text)
@@ -164,8 +167,8 @@ def create_letter_img(text, im_shape):
   i_t = cv2.resize(i_t, im_shape)
   return i_t
 
-def non_stylised_gen(img_name, img_path, letter_write):
-  i_s = extract_craft_text_region(img_name, img_path)
+def non_stylised_gen(img_name, img_path, letter_write, border):
+  i_s = extract_craft_text_region(img_name, img_path, border)
   
   #text = word_list['Word'].iloc[0].upper()
   for i in letter_write:
@@ -183,45 +186,59 @@ def sharpen_image(translated_im):
   cv2_imshow(image_sharp)
   return image_sharp
 
-def final_integration(img, img_name, letter_write, word_list):
+def final_integration(img_name, img_path, letter_write, word_list, border):
+  img= cv2.imread(img_path)
+  if border==0:
+    cv2.imwrite('check.png', img)
+
   translated_im = cv2.imread('results/result.png')
   cv2.imwrite('cur_test/sharp.png', translated_im)
 
-  translated_im = translated_im[30:-30, 30:-30]
+  if border>0:
+      translated_im = translated_im[30:-30, 30:-30]
+      
   cv2_imshow(translated_im)
   image_sharp = sharpen_image(translated_im)
   sharp_im  = keras_ocr.tools.read('cur_test/sharp.png')
+  x1, y1, x2, y2, x3, y3, x4, y4 = get_craft_coords(img_name)
   prediction_groups = pipeline.recognize([sharp_im])
   keras_ocr.tools.drawAnnotations(image=sharp_im, predictions=prediction_groups[0])
-  if prediction_groups==[[]]:
+  sl = letter_write.pop()
+  letter_write.add(sl)
+  if prediction_groups==[[]] or prediction_groups[0][0][0].lower==sl.lower():
     sharp_im  = keras_ocr.tools.read('results/result.png')
     prediction_groups = pipeline.recognize([sharp_im])
     keras_ocr.tools.drawAnnotations(image=sharp_im, predictions=prediction_groups[0])
-
-  box = prediction_groups[0][0][1].tolist()
-
-  x0_2, y0_2 = box[0]
-  x1_2, y1_2 = box[1] 
-  x2_2, y2_2 = box[2]
-  x3_2, y3_2 = box[3] 
-
-  i = int(x0_2)
-  j = int(x1_2)
-  a = image_sharp.shape[0]
   lol = img.shape[1]*20//1600        
-  text_extraction = image_sharp[0:a, i-lol:j+lol]
-  #text_extraction = image_sharp[0+30:a-30, i-lol:j+lol]
-  cv2_imshow(text_extraction)
 
-  for i in letter_write:
-    text = str(i).upper()
-  result = word_list['Word'].iloc[0].upper().find(text)
 
-  x1, y1, x2, y2, x3, y3, x4, y4 = get_craft_coords(img_name)
+  try:
+      box = prediction_groups[0][0][1].tolist()
 
-  if (result==0):
-    img[y1[0]-10:y3[0]+10, x1[0]+lol-text_extraction.shape[1]:x1[0]+lol] = text_extraction
-  else:  
-    img[y1[0]-10:y3[0]+10, x3[0]-2*lol:x3[0]-2*lol+text_extraction.shape[1]] = text_extraction
+      x0_2, y0_2 = box[0]
+      x1_2, y1_2 = box[1] 
+      x2_2, y2_2 = box[2]
+      x3_2, y3_2 = box[3] 
 
-  return img
+      i = int(x0_2)
+      j = int(x1_2)
+      a = image_sharp.shape[0]
+      text_extraction = image_sharp[0:a, i-lol:j+lol]
+      #text_extraction = image_sharp[0+30:a-30, i-lol:j+lol]
+      cv2_imshow(text_extraction)
+
+      for i in letter_write:
+        text = str(i).upper()
+      result = word_list['Word'].iloc[0].upper().find(text)
+
+
+      if (result==0):
+        img[y1[0]-10:y3[0]+10, x1[0]+lol-text_extraction.shape[1]:x1[0]+lol] = text_extraction
+      else:  
+        img[y1[0]-10:y3[0]+10, x3[0]-2*lol:x3[0]-2*lol+text_extraction.shape[1]] = text_extraction
+  except:
+      print('Results for run '+str(border+1)+' not completed properly')    
+      img[y1[0]-10:y3[0]+10, x1[0]+lol-translated_im.shape[1]:x1[0]+lol] = translated_im
+      return '.', img
+
+  return prediction_groups[0][0][0], img
