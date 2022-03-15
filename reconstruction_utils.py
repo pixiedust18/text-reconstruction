@@ -17,8 +17,9 @@ import re
 from collections import Counter
 from google.colab.patches import cv2_imshow
 from string import ascii_lowercase
-
 from IPython import display
+
+pipeline = keras_ocr.pipeline.Pipeline()
 
 def read_text(img_path):
   img = keras_ocr.tools.read(img_path)
@@ -97,7 +98,7 @@ def missing_letters(correct, wrong):
 
 def get_craft_coords(img_name):
   #f = open("/content/CRAFT-pytorch/result/res_"+img_name+".txt", "r")
-  f = open("/craft_outputs/"+img_name+"_text_detection.txt", "r")
+  f = open("craft_outputs/image_text_detection.txt", "r")
 
   lines = f.readlines() 
   x1 = []
@@ -147,7 +148,7 @@ def extract_craft_text_region(img_name, img_path):
 
 
   cv2_imshow(real_text)
-  cv2.imwrite('/cur_test/i_s.png', real_text)
+  cv2.imwrite('cur_test/i_s.png', real_text)
   return real_text
 
 def create_letter_img(text, im_shape):
@@ -172,7 +173,7 @@ def non_stylised_gen(img_name, img_path, letter_write):
 
   i_t = create_letter_img(text, (i_s.shape[1], i_s.shape[0]))
   cv2_imshow(i_t)
-  cv2.imwrite('/cur_test/i_t.png', i_t)
+  cv2.imwrite('cur_test/i_t.png', i_t)
 
 def sharpen_image(translated_im):
   kernel = np.array([[0, -1, 0],
@@ -182,18 +183,18 @@ def sharpen_image(translated_im):
   cv2_imshow(image_sharp)
   return image_sharp
 
-def final_integration(img_name, letter_write):
-  translated_im = cv2.imread('/results/result.png')
-  cv2.imwrite('/cur_test/sharp.png', translated_im)
+def final_integration(img, img_name, letter_write, word_list):
+  translated_im = cv2.imread('results/result.png')
+  cv2.imwrite('cur_test/sharp.png', translated_im)
 
   translated_im = translated_im[30:-30, 30:-30]
   cv2_imshow(translated_im)
   image_sharp = sharpen_image(translated_im)
-  sharp_im  = keras_ocr.tools.read('/cur_test/sharp.png')
+  sharp_im  = keras_ocr.tools.read('cur_test/sharp.png')
   prediction_groups = pipeline.recognize([sharp_im])
   keras_ocr.tools.drawAnnotations(image=sharp_im, predictions=prediction_groups[0])
   if prediction_groups==[[]]:
-    sharp_im  = keras_ocr.tools.read('/results/result.png')
+    sharp_im  = keras_ocr.tools.read('results/result.png')
     prediction_groups = pipeline.recognize([sharp_im])
     keras_ocr.tools.drawAnnotations(image=sharp_im, predictions=prediction_groups[0])
 
