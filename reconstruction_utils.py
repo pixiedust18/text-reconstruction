@@ -150,7 +150,7 @@ def extract_craft_text_region(img_name, img_path, border):
     real_text = cv2.copyMakeBorder(real_text,30,30,30,30,cv2.BORDER_CONSTANT,value=colour)
 
 
-  cv2_imshow(real_text)
+  #cv2_imshow(real_text)
   cv2.imwrite('cur_test/i_s.png', real_text)
   return real_text
 
@@ -175,7 +175,7 @@ def non_stylised_gen(img_name, img_path, letter_write, border):
     text = str(i).upper()
 
   i_t = create_letter_img(text, (i_s.shape[1], i_s.shape[0]))
-  cv2_imshow(i_t)
+  #cv2_imshow(i_t)
   cv2.imwrite('cur_test/i_t.png', i_t)
 
 def sharpen_image(translated_im):
@@ -183,13 +183,11 @@ def sharpen_image(translated_im):
                     [-1, 5,-1],
                     [0, -1, 0]])
   image_sharp = cv2.filter2D(src=translated_im, ddepth=-1, kernel=kernel)
-  cv2_imshow(image_sharp)
+  #cv2_imshow(image_sharp)
   return image_sharp
 
 def final_integration(img_name, img_path, letter_write, word_list, border):
   img= cv2.imread(img_path)
-  if border==0:
-    cv2.imwrite('check.png', img)
 
   translated_im = cv2.imread('results/result.png')
   cv2.imwrite('cur_test/sharp.png', translated_im)
@@ -197,7 +195,7 @@ def final_integration(img_name, img_path, letter_write, word_list, border):
   if border>0:
       translated_im = translated_im[30:-30, 30:-30]
       
-  cv2_imshow(translated_im)
+  #cv2_imshow(translated_im)
   image_sharp = sharpen_image(translated_im)
   sharp_im  = keras_ocr.tools.read('cur_test/sharp.png')
   x1, y1, x2, y2, x3, y3, x4, y4 = get_craft_coords(img_name)
@@ -225,7 +223,7 @@ def final_integration(img_name, img_path, letter_write, word_list, border):
       a = image_sharp.shape[0]
       text_extraction = image_sharp[0:a, i-lol:j+lol]
       #text_extraction = image_sharp[0+30:a-30, i-lol:j+lol]
-      cv2_imshow(text_extraction)
+      #cv2_imshow(text_extraction)
 
       for i in letter_write:
         text = str(i).upper()
@@ -238,7 +236,13 @@ def final_integration(img_name, img_path, letter_write, word_list, border):
         img[y1[0]-10:y3[0]+10, x3[0]-2*lol:x3[0]-2*lol+text_extraction.shape[1]] = text_extraction
   except:
       print('Results for run '+str(border+1)+' not completed properly')    
-      img[y1[0]-10:y3[0]+10, x1[0]+lol-translated_im.shape[1]:x1[0]+lol] = translated_im
+      try:
+        if (result==0):
+          img[y1[0]-10:y3[0]+10, x1[0]+lol-translated_im.shape[1]:x1[0]+lol] = translated_im
+        else:  
+          img[y1[0]-10:y3[0]+10, x3[0]-2*lol:x3[0]-2*lol+translated_im.shape[1]] = translated_im
+      except:
+        print("Image size inadequate")
       return '.', img
 
   return prediction_groups[0][0][0], img
