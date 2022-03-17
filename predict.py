@@ -141,6 +141,7 @@ def main():
       flag = True
     word_list = my_autocorrect(words, incomplete_word, flag, start, end)
     letter_write = missing_letters(word_list['Word'].iloc[0].lower(), incomplete_word)
+    print(word_list['Word'].iloc[0].lower())
     col = np.mean(img)
     pref_col = 0
     if col<150:
@@ -157,21 +158,24 @@ def main():
         result_path = 'results/result.png'
         pred_letter, res = final_integration(img_name,img_path, letter_write, word_list, i)
         #plt.imshow(res)
-        cv2.imwrite(str(i)+'.png', res)
+        #cv2.imwrite(str(i)+'.png', res)
 
         print(pred_letter)
         x = letter_write.pop()
         letter_write.add(x)
         if not final_res.any() and pref_col == i:
             final_res = res
+            print("saved")
         if i==3 and not final_res.any():
             final_res = res
+            print("saved")
         if pred_letter.lower()==x.lower():
             final_res = res
+            print("saved")
             break
         
     cv2_imshow(final_res)
-    cv2.imwrite('results/reconstructed_text.png', res)
+    cv2.imwrite('results/reconstructed_text.png', final_res)
     
                 
 if __name__ == '__main__':
