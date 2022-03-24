@@ -1,11 +1,3 @@
-"""
-SRNet - Editing Text in the Wild
-Common utility functions and classes.
-Copyright (c) 2019 Netease Youdao Information Technology Co.,Ltd.
-Licensed under the GPL License (see LICENSE for details)
-Written by Yu Qian
-"""
-
 import tensorflow as tf
 from tensorflow.python.framework import graph_util
 import os

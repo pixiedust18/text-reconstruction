@@ -1,11 +1,3 @@
-"""
-SRNet - Editing Text in the Wild
-Data generator.
-Copyright (c) 2019 Netease Youdao Information Technology Co.,Ltd.
-Licensed under the GPL License (see LICENSE for details)
-Written by Yu Qian
-"""
-
 import os
 import cv2
 import numpy as np

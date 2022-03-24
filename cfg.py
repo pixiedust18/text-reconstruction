@@ -1,11 +1,3 @@
-"""
-SRNet - Editing Text in the Wild
-Some configurations.
-Copyright (c) 2019 Netease Youdao Information Technology Co.,Ltd.
-Licensed under the GPL License (see LICENSE for details)
-Written by Yu Qian
-"""
-
 # device
 gpu = 0
 

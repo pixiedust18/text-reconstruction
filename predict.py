@@ -1,11 +1,3 @@
-"""
-SRNet - Editing Text in the Wild
-Data prediction.
-Copyright (c) 2019 Netease Youdao Information Technology Co.,Ltd.
-Licensed under the GPL License (see LICENSE for details)
-Written by Krisha Bhambani
-"""
-
 from model import SRNet
 import numpy as np
 import os
